@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Semáforo — Tomador de tiempo</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#161F36">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Semáforo">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root{
+  --navy:#161F36;
+  --navy-2:#1F2C4C;
+  --navy-3:#28375E;
+  --parchment:#F2EAD3;
+  --parchment-dim:#D9CFAF;
+  --gold:#C9A227;
+  --gold-light:#E4C766;
+  --stamp:#A6342B;
+  --stamp-light:#C85A48;
+  --text:#EDE6D6;
+  --muted:#8E9AB8;
+  /* luces del semáforo */
+  --l-verde:#1E9E5A;
+  --l-amarillo:#F2B705;
+  --l-rojo:#D2352B;
+  --l-apagado:#10172A;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{overscroll-behavior:none;}
+body{margin:0; background:var(--navy); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;}
+button{font-family:inherit;}
+.wrap{max-width:560px; margin:0 auto; padding:calc(20px + env(safe-area-inset-top)) 16px 40px; min-height:100vh; display:flex; flex-direction:column;}
+
+header{border-bottom:1px solid var(--navy-3); padding-bottom:14px; margin-bottom:14px;}
+.eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:var(--gold); text-transform:uppercase;}
+h1{font-family:'Fraunces',serif; font-weight:700; font-size:34px; margin:4px 0 2px; color:var(--parchment); letter-spacing:-.01em;}
+.owner-line{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-top:2px;}
+
+.tabnav{display:flex; gap:8px; margin-bottom:18px;}
+.tab-btn{flex:1; background:var(--navy-2); border:1px solid var(--navy-3); color:var(--muted); font-weight:600; font-size:13.5px; padding:10px 6px; border-radius:8px; cursor:pointer;}
+.tab-btn.active{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+.tab-btn .count{font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.8;}
+
+.section-title{font-family:'Fraunces',serif; font-size:15px; color:var(--gold-light); margin:0 0 10px; letter-spacing:.02em;}
+.label{display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin:0 0 6px;}
+
+/* ------- Tablero del semáforo ------- */
+.board{position:relative; border-radius:14px; border:1px solid var(--navy-3); background:var(--l-apagado); padding:18px 16px 16px; margin-bottom:14px; transition:background .35s, border-color .35s; overflow:hidden;}
+.board.verde{background:var(--l-verde); border-color:var(--l-verde);}
+.board.amarillo{background:var(--l-amarillo); border-color:var(--l-amarillo);}
+.board.rojo{background:var(--l-rojo); border-color:var(--l-rojo);}
+.board.campana{animation:parpadeo 1s steps(2,start) infinite;}
+@keyframes parpadeo{0%{background:var(--l-rojo);}50%{background:#7a1a14;}}
+.board-top{display:flex; justify-content:space-between; align-items:center;}
+.board-type{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.75);}
+.board.amarillo .board-type, .board.amarillo .clock, .board.amarillo .board-phase{color:#2a2000;}
+.lights{display:flex; gap:6px;}
+.lights i{width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2);}
+.lights i.on-v{background:#5BE39A;} .lights i.on-a{background:#FFD84A;} .lights i.on-r{background:#FF6B5E;}
+.board.amarillo .lights i{border-color:rgba(0,0,0,.25); background:rgba(0,0,0,.12);}
+.board.amarillo .lights i.on-a{background:#fff3b0;}
+.clock{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(64px,22vw,110px); line-height:1; text-align:center; color:#fff; margin:14px 0 6px; font-variant-numeric:tabular-nums; letter-spacing:-.02em;}
+.board-phase{text-align:center; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.85); min-height:16px;}
+.marks{display:flex; justify-content:space-between; margin-top:14px; gap:6px;}
+.mark{flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 2px; border-radius:6px; background:rgba(0,0,0,.22); color:rgba(255,255,255,.85);}
+.mark b{display:block; font-size:13px; margin-top:2px;}
+.mark.v{box-shadow:inset 0 -3px 0 var(--l-verde);} .mark.a{box-shadow:inset 0 -3px 0 var(--l-amarillo);} .mark.r{box-shadow:inset 0 -3px 0 var(--l-rojo);}
+.board.amarillo .mark{color:#2a2000; background:rgba(0,0,0,.1);}
+
+.field{margin-bottom:12px;}
+.input{width:100%; background:var(--navy-2); border:1px solid var(--navy-3); border-radius:8px; color:var(--text); font-size:16px; padding:11px 12px; outline:none;}
+.input:focus{border-color:var(--gold);}
+.input:disabled{opacity:.6;}
+
+.chips{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0; background:var(--navy-2); border:1px solid var(--navy-3); color:var(--parchment-dim); border-radius:20px; padding:8px 12px; font-size:13px; cursor:pointer; white-space:nowrap;}
+.chip small{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); margin-left:4px;}
+.chip.active{background:var(--navy-3); border-color:var(--gold); color:var(--gold-light);}
+.chip.active small{color:var(--gold);}
+.chip:disabled{opacity:.45;}
+
+.controls{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;}
+.btn{border:none; border-radius:9px; font-weight:600; font-size:15px; padding:14px 10px; cursor:pointer;}
+.btn:disabled{opacity:.4; cursor:default;}
+.btn-gold{background:var(--gold); color:var(--navy);}
+.btn-dark{background:var(--navy-2); border:1px solid var(--navy-3); color:var(--parchment);}
+.btn-stamp{background:var(--stamp); color:#fff;}
+.btn-wide{grid-column:1 / -1;}
+.btn-big{font-size:18px; padding:18px 10px;}
+.hint{font-size:11.5px; color:var(--muted); margin-top:10px; line-height:1.45;}
+
+/* ------- Pantalla del orador ------- */
+.stage{position:fixed; inset:0; z-index:80; background:var(--navy); display:none; flex-direction:column; align-items:stretch; justify-content:center; padding:calc(16px + env(safe-area-inset-top)) 16px calc(76px + env(safe-area-inset-bottom)); user-select:none; -webkit-user-select:none;}
+.stage.show{display:flex;}
+.stage-card{flex:1; border-radius:22px; border:2px solid var(--navy-3); background:var(--l-apagado); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:background .35s, border-color .35s;}
+.stage.verde .stage-card{background:var(--l-verde); border-color:var(--l-verde);}
+.stage.amarillo .stage-card{background:var(--l-amarillo); border-color:var(--l-amarillo);}
+.stage.rojo .stage-card{background:var(--l-rojo); border-color:var(--l-rojo);}
+.stage.campana .stage-card{animation:parpadeo 1s steps(2,start) infinite;}
+.stage-lights{position:absolute; top:18px; right:20px; display:flex; gap:8px;}
+.stage-lights i{width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);}
+.stage-lights i.on-v{background:#5BE39A;} .stage-lights i.on-a{background:#fff3b0;} .stage-lights i.on-r{background:#FF6B5E;}
+.stage-type{position:absolute; top:20px; left:22px; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.75);}
+.stage-clock{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(80px,24vmin,240px); line-height:1; color:#fff; font-variant-numeric:tabular-nums;}
+.stage.amarillo .stage-clock, .stage.amarillo .stage-msg, .stage.amarillo .stage-type{color:#2a2000;}
+.stage.amarillo .stage-lights i{border-color:rgba(0,0,0,.25); background:rgba(0,0,0,.12);}
+.stage.amarillo .stage-lights i.on-a{background:#fff3b0;}
+.stage-clock.hidden{display:none;}
+.stage-msg{font-family:'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; font-size:clamp(14px,3.2vmin,22px); color:rgba(255,255,255,.85); margin-top:10px; text-align:center; padding:0 20px;}
+.stage-bar{position:absolute; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); display:flex; gap:8px; justify-content:space-between; align-items:center;}
+.stage-bar button{background:var(--navy-2); color:var(--parchment); border:1px solid var(--navy-3); border-radius:8px; padding:10px 14px; font-size:13px; cursor:pointer;}
+.stage-mini{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); padding:9px 4px; text-align:center; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+/* ------- Miembros ------- */
+.members{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+.mchip{background:var(--navy-2); border:1px solid var(--navy-3); color:var(--parchment-dim); border-radius:20px; padding:7px 12px; font-size:13px; cursor:pointer;}
+.mchip.active{background:var(--navy-3); border-color:var(--gold); color:var(--gold-light);}
+.mchip.spoke{opacity:.5;}
+.mchip.spoke::after{content:' ✓'; color:var(--gold);}
+.member-row{display:flex; align-items:center; gap:10px; background:var(--navy-2); border:1px solid var(--navy-3); border-radius:9px; padding:9px 12px; margin-bottom:6px;}
+.member-row .nm{flex:1; font-size:14px;}
+.member-row button{background:none; border:none; color:var(--stamp-light); font-size:17px; cursor:pointer; padding:2px 6px;}
+.addrow{display:flex; gap:8px; margin-top:6px;}
+.addrow .input{flex:1;}
+.addrow .btn{padding:0 16px;}
+.minor-actions{display:flex; gap:8px; margin-top:8px;}
+.minor-actions .btn{flex:1; font-size:13px; padding:10px 6px;}
+textarea.input{min-height:160px; resize:vertical; font-size:15px; line-height:1.4;}
+
+/* ------- Reporte ------- */
+.rep-head{background:var(--navy-2); border:1px solid var(--navy-3); border-radius:10px; padding:12px; margin-bottom:12px;}
+.rep-head .t{font-family:'Fraunces',serif; font-size:18px; color:var(--parchment);}
+.rep-head .s{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); margin-top:3px;}
+.entry{display:flex; align-items:center; gap:10px; background:var(--navy-2); border:1px solid var(--navy-3); border-radius:9px; padding:10px 12px; margin-bottom:7px;}
+.entry .dot{width:12px; height:12px; border-radius:50%; flex-shrink:0;}
+.entry .info{flex:1; min-width:0;}
+.entry .nm{font-size:14.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.entry .ty{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); margin-top:1px;}
+.entry .tm{font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:600; color:var(--gold-light);}
+.badge{font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; padding:2px 6px; border-radius:4px; margin-left:4px;}
+.badge.ok{background:rgba(30,158,90,.2); color:#6fe3a4;}
+.badge.corto{background:rgba(242,183,5,.18); color:#ffd84a;}
+.badge.excedido{background:rgba(210,53,43,.22); color:#ff8a7e;}
+.entry .del{background:none; border:none; color:var(--stamp-light); font-size:18px; cursor:pointer; padding:2px 4px;}
+.empty{font-size:13px; color:var(--muted); text-align:center; padding:30px 0; line-height:1.5;}
+.elig{background:var(--navy-2); border:1px solid var(--gold); border-radius:10px; padding:12px; margin:14px 0;}
+.elig .grp{margin-top:8px; font-size:13.5px;}
+.elig .grp b{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--gold); text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:2px;}
+
+/* ------- Ajustes ------- */
+.type-row{display:flex; align-items:center; gap:10px; background:var(--navy-2); border:1px solid var(--navy-3); border-radius:9px; padding:10px 12px; margin-bottom:7px;}
+.type-row .info{flex:1; min-width:0;}
+.type-row .nm{font-size:14px; font-weight:500;}
+.type-row .tt{font-family:'JetBrains Mono',monospace; font-size:11px; margin-top:3px; display:flex; gap:8px;}
+.tt .v{color:#6fe3a4;} .tt .a{color:#ffd84a;} .tt .r{color:#ff8a7e;}
+.type-row button{background:none; border:1px solid var(--navy-3); color:var(--parchment-dim); border-radius:6px; padding:5px 9px; font-size:12px; cursor:pointer;}
+.type-row button.x{color:var(--stamp-light); border-color:transparent; font-size:17px; padding:2px 6px;}
+.toggle-row{display:flex; align-items:center; gap:12px; background:var(--navy-2); border:1px solid var(--navy-3); border-radius:9px; padding:12px; margin-bottom:7px; cursor:pointer;}
+.toggle-row .info{flex:1;}
+.toggle-row .nm{font-size:14px; font-weight:500;}
+.toggle-row .sb{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.35;}
+.sw{width:44px; height:26px; border-radius:13px; background:var(--navy-3); position:relative; flex-shrink:0; transition:background .2s;}
+.sw::after{content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--parchment-dim); transition:left .2s;}
+.toggle-row.on .sw{background:var(--gold);}
+.toggle-row.on .sw::after{left:21px; background:var(--navy);}
+.block{margin-bottom:22px;}
+
+/* ------- Modales ------- */
+.overlay{position:fixed; inset:0; background:rgba(10,14,26,.92); display:none; align-items:center; justify-content:center; z-index:60; padding:20px;}
+.overlay.show{display:flex;}
+.card{background:var(--navy-2); border:1px solid var(--gold); border-radius:12px; padding:22px; max-width:380px; width:100%; max-height:88vh; overflow-y:auto;}
+.card h2{font-family:'Fraunces',serif; color:var(--parchment); font-size:21px; margin:4px 0 12px;}
+.card p{font-size:13.5px; color:var(--parchment-dim); line-height:1.5; margin:0 0 14px;}
+.card .field{margin-bottom:10px;}
+.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+.row3 .input{text-align:center; font-family:'JetBrains Mono',monospace; padding:10px 4px;}
+.row3 .label{text-align:center;}
+.card-actions{display:flex; gap:8px; margin-top:16px;}
+.card-actions .btn{flex:1; padding:12px;}
+.err{color:var(--stamp-light); font-size:12px; min-height:16px; margin-top:4px;}
+
+.toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:var(--parchment); color:var(--navy); font-size:13.5px; font-weight:600; padding:10px 16px; border-radius:20px; opacity:0; transition:all .25s; z-index:90; pointer-events:none;}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--navy-3);}
+
+@media (min-width:700px){ .wrap{padding-top:32px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Tomador de tiempo</div>
+    <h1>Semáforo</h1>
+    <div class="owner-line" id="ownerLine">—</div>
+  </header>
+
+  <div class="tabnav">
+    <button class="tab-btn active" data-tab="timer">Semáforo</button>
+    <button class="tab-btn" data-tab="report">Reporte <span class="count" id="repCount"></span></button>
+    <button class="tab-btn" data-tab="settings">Ajustes</button>
+  </div>
+
+  <!-- ================= SEMÁFORO ================= -->
+  <section id="view-timer">
+    <div class="board" id="board">
+      <div class="board-top">
+        <div class="board-type" id="boardType">—</div>
+        <div class="lights"><i id="lv"></i><i id="la"></i><i id="lr"></i></div>
+      </div>
+      <div class="clock" id="clock">0:00</div>
+      <div class="board-phase" id="boardPhase">Listo</div>
+      <div class="marks" id="marks"></div>
+    </div>
+
+    <div class="field">
+      <span class="label">Orador</span>
+      <input class="input" id="speakerInput" list="speakerList" type="text" placeholder="Nombre de quien habla" autocomplete="off">
+      <datalist id="speakerList"></datalist>
+      <div class="members" id="memberChips"></div>
+    </div>
+
+    <div class="field">
+      <span class="label">Tipo de intervención</span>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-gold btn-big btn-wide" id="startBtn">Iniciar</button>
+      <button class="btn btn-stamp" id="stopBtn" disabled>Detener y registrar</button>
+      <button class="btn btn-dark" id="resetBtn" disabled>Reiniciar</button>
+      <button class="btn btn-dark btn-wide" id="stageBtn">Mostrar al orador ⛶</button>
+    </div>
+    <div class="hint">“Mostrar al orador” pone la pantalla completa del color para voltear el equipo hacia quien habla. La pantalla no se apaga mientras corre el tiempo.</div>
+  </section>
+
+  <!-- ================= REPORTE ================= -->
+  <section id="view-report" style="display:none;">
+    <div class="rep-head">
+      <div class="t" id="repTitle">Reporte del Tomador de tiempo</div>
+      <div class="s" id="repSub">—</div>
+    </div>
+    <div id="entries"></div>
+    <div id="eligBox"></div>
+    <div class="controls">
+      <button class="btn btn-gold btn-wide" id="shareBtn">Compartir reporte</button>
+      <button class="btn btn-dark btn-wide" id="newSessionBtn">Nueva sesión</button>
+    </div>
+    <div class="hint" id="graceHint"></div>
+  </section>
+
+  <!-- ================= AJUSTES ================= -->
+  <section id="view-settings" style="display:none;">
+    <div class="block">
+      <div class="section-title">Miembros del club</div>
+      <div id="memberList"></div>
+      <div class="addrow">
+        <input class="input" id="memberInput" type="text" placeholder="Nombre del miembro" autocomplete="off">
+        <button class="btn btn-gold" id="memberAddBtn">Agregar</button>
+      </div>
+      <div class="minor-actions">
+        <button class="btn btn-dark" id="memberPasteBtn">Pegar lista</button>
+        <button class="btn btn-dark" id="memberShareBtn">Compartir lista</button>
+      </div>
+      <div class="hint">Comparte la lista por WhatsApp y tus compañeros la pegan en su equipo con “Pegar lista”.</div>
+    </div>
+
+    <div class="block">
+      <div class="section-title">Tipos de intervención</div>
+      <div id="typeList"></div>
+      <button class="btn btn-dark" style="width:100%; margin-top:4px;" id="addTypeBtn">+ Agregar tipo</button>
+    </div>
+
+    <div class="block">
+      <div class="section-title">Reglas y avisos</div>
+      <div id="toggles"></div>
+    </div>
+
+    <div class="block">
+      <div class="section-title">Datos del reporte</div>
+      <div class="field">
+        <span class="label">Tu nombre (Tomador de tiempo)</span>
+        <input class="input" id="nameField" type="text" placeholder="Tu nombre" autocomplete="off">
+      </div>
+      <div class="field">
+        <span class="label">Club</span>
+        <input class="input" id="clubField" type="text" placeholder="Nombre del club" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="block">
+      <button class="btn btn-dark" style="width:100%;" id="restoreTypesBtn">Restaurar tipos estándar</button>
+      <div class="hint">Todo se guarda solo en este equipo. Nadie más ve tus registros.</div>
+    </div>
+  </section>
+
+  <footer>Semáforo · Baugh Abogados</footer>
+</div>
+
+<!-- Pantalla del orador -->
+<div class="stage" id="stage">
+  <div class="stage-card">
+    <div class="stage-type" id="stageType"></div>
+    <div class="stage-lights"><i id="slv"></i><i id="sla"></i><i id="slr"></i></div>
+    <div class="stage-clock" id="stageClock">0:00</div>
+    <div class="stage-msg" id="stageMsg"></div>
+  </div>
+  <div class="stage-bar">
+    <button id="stageExit">✕ Salir</button>
+    <span class="stage-mini" id="stageMini">0:00</span>
+    <button id="stageToggle">Iniciar</button>
+  </div>
+</div>
+
+<!-- Bienvenida -->
+<div class="overlay" id="welcome">
+  <div class="card" style="text-align:center;">
+    <span class="eyebrow">Bienvenido</span>
+    <h2>¿Cómo te llamas?</h2>
+    <p>Aparecerá como Tomador de tiempo en el reporte.</p>
+    <div class="field"><input class="input" id="wName" type="text" placeholder="Tu nombre" autocomplete="off" style="text-align:center;"></div>
+    <div class="field"><input class="input" id="wClub" type="text" placeholder="Club (opcional)" autocomplete="off" style="text-align:center;"></div>
+    <button class="btn btn-gold" style="width:100%;" id="wSave">Empezar</button>
+  </div>
+</div>
+
+<!-- Editar tipo -->
+<div class="overlay" id="typeModal">
+  <div class="card">
+    <h2 id="tmTitle">Nuevo tipo</h2>
+    <div class="field">
+      <span class="label">Nombre</span>
+      <input class="input" id="tmName" type="text" placeholder="Ej. Evaluador general" autocomplete="off">
+    </div>
+    <div class="row3">
+      <div><span class="label">Verde</span><input class="input" id="tmV" inputmode="numeric" placeholder="5:00"></div>
+      <div><span class="label">Amarillo</span><input class="input" id="tmA" inputmode="numeric" placeholder="6:00"></div>
+      <div><span class="label">Rojo</span><input class="input" id="tmR" inputmode="numeric" placeholder="7:00"></div>
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <span class="label">Tolerancia (segundos, ±)</span>
+      <input class="input" id="tmTol" inputmode="numeric" placeholder="30">
+    </div>
+    <div class="hint" style="margin-top:6px;">Tiempos en minutos:segundos. Si dejas vacío el amarillo, se pone a la mitad entre verde y rojo.</div>
+    <div class="err" id="tmErr"></div>
+    <div class="card-actions">
+      <button class="btn btn-dark" id="tmCancel">Cancelar</button>
+      <button class="btn btn-gold" id="tmSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pegar lista de miembros -->
+<div class="overlay" id="pasteModal">
+  <div class="card">
+    <h2>Pegar lista</h2>
+    <p>Un nombre por renglón. Los que ya estén no se duplican.</p>
+    <textarea class="input" id="pasteArea" placeholder="Ana López&#10;Luis Pérez&#10;…"></textarea>
+    <div class="card-actions">
+      <button class="btn btn-dark" id="pasteCancel">Cancelar</button>
+      <button class="btn btn-gold" id="pasteSave">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmación genérica -->
+<div class="overlay" id="confirmModal">
+  <div class="card">
+    <h2 id="cfTitle">¿Seguro?</h2>
+    <p id="cfText"></p>
+    <div class="card-actions">
+      <button class="btn btn-dark" id="cfNo">Cancelar</button>
+      <button class="btn btn-stamp" id="cfYes">Sí</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================================================================
+   Almacenamiento local (solo en este equipo)
+   ================================================================== */
+const K = {
+  types:'semaforo:types', prefs:'semaforo:prefs', name:'semaforo:name', club:'semaforo:club',
+  session:'semaforo:session', run:'semaforo:run', members:'semaforo:members'
+};
+const mem = {};
+function load(k, def){
+  try{ const raw = localStorage.getItem(k); if(raw != null) return JSON.parse(raw); }catch(e){}
+  return (k in mem) ? mem[k] : def;
+}
+function save(k, v){
+  mem[k] = v;
+  try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){}
+}
+
+const DEFAULT_TYPES = [
+  {id:'improv',  nombre:'Tema improvisado', v:60,  a:90,  r:120, tol:10},
+  {id:'discurso',nombre:'Discurso',         v:300, a:360, r:420, tol:30},
+  {id:'rompe',   nombre:'Rompehielos',      v:240, a:300, r:360, tol:30},
+  {id:'eval',    nombre:'Evaluación',       v:120, a:150, r:180, tol:30}
+];
+const DEFAULT_PREFS = { gracia:true, vibrar:true, sonido:false, tiempoOrador:false, campana:true };
+
+let types   = load(K.types, null) || DEFAULT_TYPES.map(t=>({...t}));
+let prefs   = Object.assign({}, DEFAULT_PREFS, load(K.prefs, {}));
+let session = load(K.session, null) || newSession();
+let run     = load(K.run, null) || { typeId: types[0].id, speaker:'', acc:0, startedAt:null };
+let members = load(K.members, []) || [];
+// equipos que ya tenían tipos guardados sin tolerancia
+types.forEach(t => { if(t.tol == null) t.tol = (t.id==='improv') ? 10 : 30; });
+save(K.types, types);
+if(!types.find(t=>t.id===run.typeId)) run.typeId = types[0].id;
+
+function newSession(){ return { fecha: new Date().toISOString(), entries: [] }; }
+
+/* ==================================================================
+   Utilidades
+   ================================================================== */
+const $ = id => document.getElementById(id);
+function fmt(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const m = Math.floor(sec/60), s = sec%60;
+  return m + ':' + String(s).padStart(2,'0');
+}
+function parseTime(str){
+  str = String(str||'').trim();
+  if(!str) return null;
+  if(/^\d+$/.test(str)){ // "5" = 5 minutos ; "90" o más = segundos
+    const n = parseInt(str,10);
+    return n < 60 ? n*60 : n;
+  }
+  const m = str.match(/^(\d{1,3})[:.,](\d{1,2})$/);
+  if(!m) return NaN;
+  const s = parseInt(m[2],10);
+  if(s>59) return NaN;
+  return parseInt(m[1],10)*60 + s;
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function curType(){ return types.find(t=>t.id===run.typeId) || types[0]; }
+function elapsed(){ return (run.acc + (run.startedAt ? Date.now()-run.startedAt : 0)) / 1000; }
+function isRunning(){ return run.startedAt != null; }
+function hasTime(){ return isRunning() || run.acc > 0; }
+function persistRun(){ save(K.run, run); }
+
+let toastT;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function phaseFor(sec, t){
+  if(sec >= t.r + tolOf(t)) return 'campana';
+  if(sec >= t.r) return 'rojo';
+  if(sec >= t.a) return 'amarillo';
+  if(sec >= t.v) return 'verde';
+  return 'espera';
+}
+const PHASE_LABEL = { espera:'', verde:'Tiempo mínimo', amarillo:'Ve cerrando', rojo:'Tiempo máximo', campana:'Concluye ya' };
+
+function tolOf(t){ return (t && t.tol != null) ? t.tol : 30; }
+function statusFor(sec, t){
+  const g = prefs.gracia ? tolOf(t) : 0;
+  if(sec < t.v - g) return 'corto';
+  if(sec > t.r + g) return 'excedido';
+  return 'ok';
+}
+const STATUS_LABEL = { ok:'En tiempo', corto:'Corto', excedido:'Excedido' };
+
+/* ==================================================================
+   Avisos al cambiar de color
+   ================================================================== */
+let audioCtx = null;
+function beep(n){
+  if(!prefs.sonido) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<n;i++){
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type='sine'; o.frequency.value = 880;
+      const t0 = audioCtx.currentTime + i*0.28;
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.25,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+0.2);
+      o.connect(g).connect(audioCtx.destination); o.start(t0); o.stop(t0+0.22);
+    }
+  }catch(e){}
+}
+function buzz(pattern){ if(prefs.vibrar && navigator.vibrate) try{ navigator.vibrate(pattern); }catch(e){} }
+function announce(phase){
+  if(phase==='verde'){ buzz(200); beep(1); }
+  else if(phase==='amarillo'){ buzz([200,120,200]); beep(2); }
+  else if(phase==='rojo'){ buzz([400,150,400]); beep(3); }
+  else if(phase==='campana' && prefs.campana){ buzz([600,200,600,200,600]); beep(4); }
+}
+
+/* ==================================================================
+   Pantalla siempre encendida
+   ================================================================== */
+let wakeLock = null;
+async function keepAwake(on){
+  try{
+    if(on && 'wakeLock' in navigator && !wakeLock){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', ()=>{ wakeLock = null; });
+    } else if(!on && wakeLock){ await wakeLock.release(); wakeLock = null; }
+  }catch(e){ wakeLock = null; }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && (isRunning() || stageOpen)) keepAwake(true);
+});
+
+/* ==================================================================
+   Render del semáforo
+   ================================================================== */
+let lastPhase = null;
+function renderBoard(){
+  const t = curType(), sec = elapsed(), ph = phaseFor(sec, t);
+  const cls = ph==='campana' ? (prefs.campana ? 'rojo campana' : 'rojo') : (ph==='espera' ? '' : ph);
+
+  const board = $('board');
+  board.className = 'board ' + cls;
+  $('clock').textContent = fmt(sec);
+  $('boardType').textContent = t.nombre;
+  let msg = PHASE_LABEL[ph];
+  if(ph==='espera') msg = isRunning() ? 'En curso' : (hasTime() ? 'En pausa' : 'Listo');
+  else if(!isRunning()) msg += ' · en pausa';
+  $('boardPhase').textContent = msg;
+
+  const baseOn = ph==='campana' ? 'rojo' : ph;
+  $('lv').className = baseOn==='verde' ? 'on-v' : '';
+  $('la').className = baseOn==='amarillo' ? 'on-a' : '';
+  $('lr').className = baseOn==='rojo' ? 'on-r' : '';
+
+  // pantalla del orador
+  const st = $('stage');
+  st.className = 'stage' + (stageOpen ? ' show' : '') + (cls ? ' '+cls : '');
+  $('stageClock').textContent = fmt(sec);
+  $('stageType').textContent = t.nombre;
+  $('slv').className = baseOn==='verde' ? 'on-v' : '';
+  $('sla').className = baseOn==='amarillo' ? 'on-a' : '';
+  $('slr').className = baseOn==='rojo' ? 'on-r' : '';
+  $('stageClock').classList.toggle('hidden', !prefs.tiempoOrador);
+  $('stageMini').textContent = fmt(sec) + (($('speakerInput').value||'').trim() ? ' · ' + $('speakerInput').value.trim() : '');
+  let smsg = '';
+  if(ph==='campana' && prefs.campana) smsg = 'Tiempo';
+  else if(ph==='espera') smsg = (!isRunning() && !hasTime()) ? 'Listo' : '';
+  else smsg = PHASE_LABEL[ph];
+  $('stageMsg').textContent = smsg;
+  $('stageToggle').textContent = isRunning() ? 'Pausar' : (hasTime() ? 'Reanudar' : 'Iniciar');
+
+  if(isRunning() && lastPhase !== null && ph !== lastPhase){
+    const order = ['espera','verde','amarillo','rojo','campana'];
+    if(order.indexOf(ph) > order.indexOf(lastPhase)) announce(ph);
+  }
+  lastPhase = ph;
+}
+
+function renderMarks(){
+  const t = curType();
+  $('marks').innerHTML =
+    `<div class="mark v">Verde<b>${fmt(t.v)}</b></div>` +
+    `<div class="mark a">Amarillo<b>${fmt(t.a)}</b></div>` +
+    `<div class="mark r">Rojo<b>${fmt(t.r)}</b></div>`;
+}
+
+function renderChips(){
+  const locked = hasTime();
+  $('chips').innerHTML = types.map(t =>
+    `<button class="chip ${t.id===run.typeId?'active':''}" data-id="${t.id}" ${locked && t.id!==run.typeId ? 'disabled':''}>${esc(t.nombre)}<small>${fmt(t.v)}–${fmt(t.r)}</small></button>`
+  ).join('');
+  $('chips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    if(hasTime()) return;
+    run.typeId = b.dataset.id; persistRun(); lastPhase = null;
+    renderChips(); renderMarks(); renderBoard(); renderSpeakerList();
+  });
+}
+
+function renderControls(){
+  const running = isRunning(), any = hasTime();
+  $('startBtn').textContent = running ? 'Pausar' : (any ? 'Reanudar' : 'Iniciar');
+  $('startBtn').className = 'btn btn-big btn-wide ' + (running ? 'btn-dark' : 'btn-gold');
+  $('stopBtn').disabled = !any;
+  $('resetBtn').disabled = !any;
+}
+
+function renderSpeakerList(){
+  const names = [...new Set([...members, ...session.entries.map(e=>e.orador)])];
+  $('speakerList').innerHTML = names.map(n=>`<option value="${esc(n)}">`).join('');
+  const cur = ($('speakerInput').value||'').trim().toLowerCase();
+  const spoke = new Set(session.entries.filter(e=>e.tipo===curType().nombre).map(e=>e.orador.toLowerCase()));
+  $('memberChips').innerHTML = members.map(m =>
+    `<button class="mchip ${m.toLowerCase()===cur?'active':''} ${spoke.has(m.toLowerCase())?'spoke':''}" data-n="${esc(m)}">${esc(m)}</button>`
+  ).join('');
+  $('memberChips').querySelectorAll('.mchip').forEach(b => b.onclick = () => {
+    const same = ($('speakerInput').value||'').trim() === b.dataset.n;
+    $('speakerInput').value = same ? '' : b.dataset.n;
+    run.speaker = $('speakerInput').value; persistRun(); renderSpeakerList(); renderBoard();
+  });
+}
+
+/* ==================================================================
+   Acciones del cronómetro
+   ================================================================== */
+function toggleRun(){
+  if(isRunning()){
+    run.acc += Date.now() - run.startedAt; run.startedAt = null;
+    keepAwake(stageOpen);
+  } else {
+    run.startedAt = Date.now();
+    lastPhase = phaseFor(elapsed(), curType());
+    keepAwake(true);
+    if(prefs.sonido){ try{ audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume(); }catch(e){} }
+  }
+  persistRun(); renderAll();
+}
+
+function resetRun(){
+  run.acc = 0; run.startedAt = null; lastPhase = null;
+  persistRun(); keepAwake(stageOpen); renderAll();
+}
+
+function stopAndLog(){
+  if(!hasTime()) return;
+  if(isRunning()){ run.acc += Date.now() - run.startedAt; run.startedAt = null; }
+  const t = curType(), sec = Math.floor(run.acc/1000);
+  const orador = ($('speakerInput').value || '').trim() || 'Sin nombre';
+  session.entries.push({
+    orador, tipo:t.nombre, v:t.v, a:t.a, r:t.r, tol:tolOf(t), seg:sec,
+    estado: statusFor(sec, t), hora: new Date().toISOString()
+  });
+  save(K.session, session);
+  toast(`${orador}: ${fmt(sec)} · ${STATUS_LABEL[statusFor(sec,t)]}`);
+  run.acc = 0; run.startedAt = null; run.speaker = ''; lastPhase = null;
+  $('speakerInput').value = '';
+  persistRun();
+  if(stageOpen) closeStage();
+  keepAwake(false);
+  renderAll();
+}
+
+/* ==================================================================
+   Pantalla del orador
+   ================================================================== */
+let stageOpen = false;
+function openStage(){
+  stageOpen = true; keepAwake(true);
+  const el = document.documentElement;
+  try{ (el.requestFullscreen || el.webkitRequestFullscreen || function(){}).call(el); }catch(e){}
+  try{ screen.orientation && screen.orientation.lock && screen.orientation.lock('any').catch(()=>{}); }catch(e){}
+  renderBoard();
+}
+function closeStage(){
+  stageOpen = false;
+  try{ if(document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){}
+  if(!isRunning()) keepAwake(false);
+  renderBoard();
+}
+document.addEventListener('fullscreenchange', ()=>{ if(!document.fullscreenElement && stageOpen) closeStage(); });
+
+/* ==================================================================
+   Reporte
+   ================================================================== */
+function sessionDate(){
+  return new Date(session.fecha).toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+function renderReport(){
+  const n = session.entries.length;
+  $('repCount').textContent = n ? `(${n})` : '';
+  const club = load(K.club, '') || '';
+  $('repTitle').textContent = club ? club : 'Reporte del Tomador de tiempo';
+  $('repSub').textContent = sessionDate() + ' · Tomador de tiempo: ' + (load(K.name,'') || '—');
+
+  if(!n){
+    $('entries').innerHTML = '<div class="empty">Aún no hay intervenciones registradas.<br>Usa “Detener y registrar” al terminar cada orador.</div>';
+    $('eligBox').innerHTML = '';
+  } else {
+    $('entries').innerHTML = session.entries.map((e,i)=>{
+      const col = e.estado==='ok' ? 'var(--l-verde)' : (e.estado==='corto' ? 'var(--l-amarillo)' : 'var(--l-rojo)');
+      return `<div class="entry">
+        <span class="dot" style="background:${col}"></span>
+        <div class="info">
+          <div class="nm">${esc(e.orador)}</div>
+          <div class="ty">${esc(e.tipo)} · ${fmt(e.v)}–${fmt(e.r)}${prefs.gracia ? ' ±'+tolOf(e)+'s' : ''}<span class="badge ${e.estado}">${STATUS_LABEL[e.estado]}</span></div>
+        </div>
+        <div class="tm">${fmt(e.seg)}</div>
+        <button class="del" data-i="${i}" title="Borrar">×</button>
+      </div>`;
+    }).join('');
+    $('entries').querySelectorAll('.del').forEach(b => b.onclick = () => {
+      const e = session.entries[+b.dataset.i];
+      confirmBox('¿Borrar registro?', `${e.orador} · ${e.tipo} · ${fmt(e.seg)}`, 'Borrar', () => {
+        session.entries.splice(+b.dataset.i, 1); save(K.session, session); renderAll();
+      });
+    });
+
+    const groups = {};
+    session.entries.filter(e=>e.estado==='ok').forEach(e=>{ (groups[e.tipo] = groups[e.tipo] || []).push(e.orador); });
+    const keys = Object.keys(groups);
+    $('eligBox').innerHTML = `<div class="elig"><div class="section-title" style="margin:0;">Elegibles para votación</div>` +
+      (keys.length ? keys.map(k=>`<div class="grp"><b>${esc(k)}</b>${groups[k].map(esc).join(', ')}</div>`).join('')
+                   : '<div class="grp" style="color:var(--muted)">Nadie quedó dentro del tiempo.</div>') + `</div>`;
+  }
+  $('graceHint').textContent = prefs.gracia
+    ? 'Se considera “en tiempo” con la tolerancia de cada tipo antes del verde y después del rojo (improvisados ±10 s; los demás ±30 s, salvo que cambies otro en Ajustes).'
+    : 'Sin tolerancia: solo cuenta “en tiempo” entre el verde y el rojo exactos.';
+}
+
+function reportText(){
+  const club = load(K.club,'') || '';
+  const lines = [];
+  lines.push('🚦 REPORTE DEL TOMADOR DE TIEMPO');
+  if(club) lines.push(club);
+  lines.push(sessionDate());
+  lines.push('Tomador de tiempo: ' + (load(K.name,'') || '—'));
+  lines.push('');
+  const byType = {};
+  session.entries.forEach(e => (byType[e.tipo] = byType[e.tipo] || []).push(e));
+  Object.keys(byType).forEach(tp => {
+    const f = byType[tp][0];
+    lines.push(`▸ ${tp} (${fmt(f.v)}–${fmt(f.r)}${prefs.gracia ? ', ±' + tolOf(f) + ' s' : ''})`);
+    byType[tp].forEach(e => {
+      const ic = e.estado==='ok' ? '🟢' : (e.estado==='corto' ? '🟡' : '🔴');
+      lines.push(`  ${ic} ${e.orador} — ${fmt(e.seg)} (${STATUS_LABEL[e.estado]})`);
+    });
+    lines.push('');
+  });
+  const ok = session.entries.filter(e=>e.estado==='ok');
+  lines.push('Elegibles para votación:');
+  if(!ok.length) lines.push('  Nadie quedó dentro del tiempo.');
+  Object.keys(byType).forEach(tp => {
+    const names = byType[tp].filter(e=>e.estado==='ok').map(e=>e.orador);
+    if(names.length) lines.push(`  ${tp}: ${names.join(', ')}`);
+  });
+  lines.push('');
+  if(!prefs.gracia) lines.push('Sin tolerancia.');
+  return lines.join('\n');
+}
+
+async function shareReport(){
+  if(!session.entries.length){ toast('No hay registros todavía'); return; }
+  const text = reportText();
+  if(navigator.share){
+    try{ await navigator.share({ title:'Reporte del Tomador de tiempo', text }); return; }
+    catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(text); toast('Reporte copiado'); }
+  catch(e){
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); toast('Reporte copiado'); }catch(_){ toast('No se pudo copiar'); }
+    ta.remove();
+  }
+}
+
+/* ==================================================================
+   Ajustes
+   ================================================================== */
+const TOGGLES = [
+  ['gracia','Aplicar tolerancia','Cada tipo tiene su margen: ±10 s en improvisados, ±30 s en los demás. Se ajusta al editar el tipo.'],
+  ['campana','Parpadeo al agotar la tolerancia','El recuadro parpadea en rojo cuando el orador rebasa el rojo más su tolerancia.'],
+  ['vibrar','Vibrar al cambiar de color','Para que sientas el cambio sin voltear a ver. Solo en Android.'],
+  ['sonido','Sonido al cambiar de color','Un pitido corto; en reunión conviene dejarlo apagado.'],
+  ['tiempoOrador','Mostrar el reloj al orador','Si está apagado, el orador solo ve el color.']
+];
+function renderSettings(){
+  $('typeList').innerHTML = types.map(t=>`
+    <div class="type-row">
+      <div class="info">
+        <div class="nm">${esc(t.nombre)}</div>
+        <div class="tt"><span class="v">● ${fmt(t.v)}</span><span class="a">● ${fmt(t.a)}</span><span class="r">● ${fmt(t.r)}</span><span style="color:var(--muted)">±${tolOf(t)}s</span></div>
+      </div>
+      <button data-edit="${t.id}">Editar</button>
+      <button class="x" data-del="${t.id}" title="Borrar">×</button>
+    </div>`).join('');
+  $('typeList').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openTypeModal(b.dataset.edit));
+  $('typeList').querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    if(types.length<=1){ toast('Debe quedar al menos un tipo'); return; }
+    const t = types.find(x=>x.id===b.dataset.del);
+    confirmBox('¿Borrar tipo?', t.nombre, 'Borrar', () => {
+      types = types.filter(x=>x.id!==t.id); save(K.types, types);
+      if(run.typeId===t.id){ run.typeId = types[0].id; persistRun(); }
+      renderAll();
+    });
+  });
+
+  $('toggles').innerHTML = TOGGLES.map(([k,n,s])=>`
+    <div class="toggle-row ${prefs[k]?'on':''}" data-k="${k}">
+      <div class="info"><div class="nm">${n}</div><div class="sb">${s}</div></div>
+      <div class="sw"></div>
+    </div>`).join('');
+  $('toggles').querySelectorAll('.toggle-row').forEach(r => r.onclick = () => {
+    const k = r.dataset.k; prefs[k] = !prefs[k]; save(K.prefs, prefs);
+    if(k==='sonido' && prefs.sonido) beep(1);
+    if(k==='gracia') recomputeStatuses();
+    renderAll();
+  });
+
+  if(document.activeElement !== $('nameField')) $('nameField').value = load(K.name,'') || '';
+  if(document.activeElement !== $('clubField')) $('clubField').value = load(K.club,'') || '';
+}
+function renderMembers(){
+  $('memberList').innerHTML = members.length
+    ? members.map((m,i)=>`<div class="member-row"><span class="nm">${esc(m)}</span><button data-i="${i}" title="Quitar">×</button></div>`).join('')
+    : '<div class="hint" style="margin:0 0 8px;">Aún no hay miembros. Agrégalos uno por uno o pega la lista completa.</div>';
+  $('memberList').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const m = members[+b.dataset.i];
+    confirmBox('¿Quitar miembro?', m, 'Quitar', () => { members.splice(+b.dataset.i,1); save(K.members, members); renderAll(); });
+  });
+}
+function addMembers(list){
+  const have = new Set(members.map(m=>m.toLowerCase()));
+  let added = 0;
+  list.map(x=>x.replace(/^[\s\-•*\d.)]+/,'').trim()).filter(Boolean).forEach(n => {
+    if(!have.has(n.toLowerCase())){ members.push(n); have.add(n.toLowerCase()); added++; }
+  });
+  members.sort((a,b)=>a.localeCompare(b,'es'));
+  save(K.members, members);
+  return added;
+}
+async function shareMembers(){
+  if(!members.length){ toast('La lista está vacía'); return; }
+  const text = members.join('\n');
+  if(navigator.share){
+    try{ await navigator.share({ title:'Miembros del club', text }); return; }
+    catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(text); toast('Lista copiada'); }catch(e){ toast('No se pudo copiar'); }
+}
+
+function recomputeStatuses(){
+  session.entries.forEach(e => { e.estado = statusFor(e.seg, e); });
+  save(K.session, session);
+}
+
+let editingId = null;
+function openTypeModal(id){
+  editingId = id || null;
+  const t = id ? types.find(x=>x.id===id) : null;
+  $('tmTitle').textContent = t ? 'Editar tipo' : 'Nuevo tipo';
+  $('tmName').value = t ? t.nombre : '';
+  $('tmV').value = t ? fmt(t.v) : '';
+  $('tmA').value = t ? fmt(t.a) : '';
+  $('tmR').value = t ? fmt(t.r) : '';
+  $('tmTol').value = t ? tolOf(t) : '30';
+  $('tmErr').textContent = '';
+  $('typeModal').classList.add('show');
+  setTimeout(()=>$('tmName').focus(), 50);
+}
+function saveTypeModal(){
+  const nombre = $('tmName').value.trim();
+  const v = parseTime($('tmV').value), r = parseTime($('tmR').value);
+  let a = parseTime($('tmA').value);
+  if(!nombre) return $('tmErr').textContent = 'Ponle nombre.';
+  if(v==null || r==null || isNaN(v) || isNaN(r)) return $('tmErr').textContent = 'Revisa el verde y el rojo (ej. 5:00).';
+  if(a==null) a = Math.round((v+r)/2);
+  if(isNaN(a)) return $('tmErr').textContent = 'Revisa el amarillo (ej. 6:00).';
+  if(!(v>0 && v<a && a<r)) return $('tmErr').textContent = 'Debe ir en orden: verde < amarillo < rojo.';
+  const tolRaw = $('tmTol').value.trim();
+  const tol = tolRaw === '' ? 30 : parseInt(tolRaw, 10);
+  if(isNaN(tol) || tol < 0 || tol > 120) return $('tmErr').textContent = 'La tolerancia va de 0 a 120 segundos.';
+  if(editingId){
+    Object.assign(types.find(x=>x.id===editingId), {nombre, v, a, r, tol});
+  } else {
+    types.push({ id:'t'+Date.now().toString(36), nombre, v, a, r, tol });
+  }
+  save(K.types, types);
+  $('typeModal').classList.remove('show');
+  renderAll();
+}
+
+/* ==================================================================
+   Confirmación
+   ================================================================== */
+let cfAction = null;
+function confirmBox(title, text, yes, action){
+  $('cfTitle').textContent = title; $('cfText').textContent = text; $('cfYes').textContent = yes || 'Sí';
+  cfAction = action; $('confirmModal').classList.add('show');
+}
+$('cfNo').onclick = () => { $('confirmModal').classList.remove('show'); cfAction = null; };
+$('cfYes').onclick = () => { $('confirmModal').classList.remove('show'); const f = cfAction; cfAction = null; f && f(); };
+
+/* ==================================================================
+   Navegación y arranque
+   ================================================================== */
+let tab = 'timer';
+document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active', x===b));
+  ['timer','report','settings'].forEach(v => $('view-'+v).style.display = v===tab ? '' : 'none');
+  renderAll();
+});
+
+function renderOwner(){
+  const n = load(K.name,''), c = load(K.club,'');
+  $('ownerLine').textContent = [n ? 'de ' + n : '', c].filter(Boolean).join(' · ') || 'Toastmasters';
+}
+
+function renderAll(){
+  renderOwner(); renderChips(); renderMarks(); renderControls(); renderBoard();
+  renderSpeakerList(); renderReport(); renderSettings(); renderMembers();
+}
+
+$('startBtn').onclick = toggleRun;
+$('stopBtn').onclick = stopAndLog;
+$('resetBtn').onclick = () => confirmBox('¿Reiniciar el tiempo?', 'Se descarta el tiempo actual sin registrarlo.', 'Reiniciar', resetRun);
+$('stageBtn').onclick = openStage;
+$('stageExit').onclick = closeStage;
+$('stageToggle').onclick = toggleRun;
+$('speakerInput').oninput = e => { run.speaker = e.target.value; persistRun(); renderSpeakerList(); };
+$('memberAddBtn').onclick = () => {
+  const n = $('memberInput').value.trim(); if(!n) return;
+  if(addMembers([n])) toast('Agregado: ' + n); else toast('Ya estaba en la lista');
+  $('memberInput').value = ''; $('memberInput').focus(); renderAll();
+};
+$('memberInput').onkeydown = e => { if(e.key==='Enter') $('memberAddBtn').click(); };
+$('memberPasteBtn').onclick = () => { $('pasteArea').value = ''; $('pasteModal').classList.add('show'); setTimeout(()=>$('pasteArea').focus(),50); };
+$('pasteCancel').onclick = () => $('pasteModal').classList.remove('show');
+$('pasteSave').onclick = () => {
+  const n = addMembers($('pasteArea').value.split(/\r?\n|,|;/));
+  $('pasteModal').classList.remove('show'); toast(n ? `${n} miembro${n>1?'s':''} agregado${n>1?'s':''}` : 'No había nombres nuevos'); renderAll();
+};
+$('memberShareBtn').onclick = shareMembers;
+$('shareBtn').onclick = shareReport;
+$('newSessionBtn').onclick = () => {
+  if(!session.entries.length){ session = newSession(); save(K.session, session); renderAll(); toast('Sesión nueva'); return; }
+  confirmBox('¿Empezar sesión nueva?', 'Se borra el reporte actual de este equipo. Compártelo antes si lo necesitas.', 'Empezar nueva', () => {
+    session = newSession(); save(K.session, session); renderAll(); toast('Sesión nueva');
+  });
+};
+$('addTypeBtn').onclick = () => openTypeModal(null);
+$('tmCancel').onclick = () => $('typeModal').classList.remove('show');
+$('tmSave').onclick = saveTypeModal;
+$('restoreTypesBtn').onclick = () => confirmBox('¿Restaurar tipos estándar?', 'Se reemplazan tus tipos por los estándar de Toastmasters.', 'Restaurar', () => {
+  types = DEFAULT_TYPES.map(t=>({...t})); save(K.types, types);
+  if(!types.find(t=>t.id===run.typeId)){ run.typeId = types[0].id; persistRun(); }
+  renderAll();
+});
+$('nameField').oninput = e => { save(K.name, e.target.value.trim()); renderOwner(); renderReport(); };
+$('clubField').oninput = e => { save(K.club, e.target.value.trim()); renderOwner(); renderReport(); };
+
+$('wSave').onclick = () => {
+  const n = $('wName').value.trim();
+  if(!n){ $('wName').focus(); return; }
+  save(K.name, n); save(K.club, $('wClub').value.trim());
+  $('welcome').classList.remove('show'); renderAll();
+};
+if(!load(K.name,'')) $('welcome').classList.add('show');
+
+$('speakerInput').value = run.speaker || '';
+renderAll();
+if(isRunning()) keepAwake(true);
+
+// Reloj: se recalcula contra la hora real, así no se desfasa aunque el equipo se alente.
+(function tick(){
+  if(isRunning()){ renderBoard(); }
+  requestAnimationFrame(tick);
+})();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
