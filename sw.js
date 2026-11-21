@@ -1,5 +1,5 @@
-const CACHE = 'semaforo-v2';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'semaforo-v3';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './jspdf.umd.min.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

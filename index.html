@@ -98,22 +98,42 @@ h1{font-family:'Fraunces',serif; font-weight:700; font-size:34px; margin:4px 0 2
 .hint{font-size:11.5px; color:var(--muted); margin-top:10px; line-height:1.45;}
 
 /* ------- Pantalla del orador ------- */
-.stage{position:fixed; inset:0; z-index:80; background:#0b0f1c; display:none; flex-direction:column; align-items:center; justify-content:center; transition:background .35s; user-select:none; -webkit-user-select:none;}
+.stage{position:fixed; inset:0; z-index:80; background:var(--navy); display:none; flex-direction:column; align-items:stretch; justify-content:center; padding:calc(16px + env(safe-area-inset-top)) 16px calc(76px + env(safe-area-inset-bottom)); user-select:none; -webkit-user-select:none;}
 .stage.show{display:flex;}
-.stage.verde{background:var(--l-verde);}
-.stage.amarillo{background:var(--l-amarillo);}
-.stage.rojo{background:var(--l-rojo);}
-.stage.campana{animation:parpadeoStage 1s steps(2,start) infinite;}
-@keyframes parpadeoStage{0%{background:var(--l-rojo);}50%{background:#5c120d;}}
-.stage-clock{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(90px,26vmin,260px); color:rgba(255,255,255,.95); font-variant-numeric:tabular-nums;}
-.stage.amarillo .stage-clock, .stage.amarillo .stage-msg{color:#2a2000;}
-.stage-clock.hidden{visibility:hidden;}
-.stage-msg{font-family:'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; font-size:14px; color:rgba(255,255,255,.7); margin-top:6px; text-align:center; padding:0 20px;}
-.stage-bar{position:absolute; left:0; right:0; bottom:0; padding:12px 14px calc(12px + env(safe-area-inset-bottom)); display:flex; gap:8px; justify-content:space-between; align-items:center; opacity:.55;}
-.stage-bar:hover, .stage-bar:active{opacity:1;}
-.stage-bar button{background:rgba(0,0,0,.35); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:10px 14px; font-size:13px; cursor:pointer;}
-.stage-mini{font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(255,255,255,.85); background:rgba(0,0,0,.35); padding:9px 12px; border-radius:8px;}
-.stage.amarillo .stage-mini{color:#fff;}
+.stage-card{flex:1; border-radius:22px; border:2px solid var(--navy-3); background:var(--l-apagado); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:background .35s, border-color .35s;}
+.stage.verde .stage-card{background:var(--l-verde); border-color:var(--l-verde);}
+.stage.amarillo .stage-card{background:var(--l-amarillo); border-color:var(--l-amarillo);}
+.stage.rojo .stage-card{background:var(--l-rojo); border-color:var(--l-rojo);}
+.stage.campana .stage-card{animation:parpadeo 1s steps(2,start) infinite;}
+.stage-lights{position:absolute; top:18px; right:20px; display:flex; gap:8px;}
+.stage-lights i{width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);}
+.stage-lights i.on-v{background:#5BE39A;} .stage-lights i.on-a{background:#fff3b0;} .stage-lights i.on-r{background:#FF6B5E;}
+.stage-type{position:absolute; top:20px; left:22px; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.75);}
+.stage-clock{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(80px,24vmin,240px); line-height:1; color:#fff; font-variant-numeric:tabular-nums;}
+.stage.amarillo .stage-clock, .stage.amarillo .stage-msg, .stage.amarillo .stage-type{color:#2a2000;}
+.stage.amarillo .stage-lights i{border-color:rgba(0,0,0,.25); background:rgba(0,0,0,.12);}
+.stage.amarillo .stage-lights i.on-a{background:#fff3b0;}
+.stage-clock.hidden{display:none;}
+.stage-msg{font-family:'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; font-size:clamp(14px,3.2vmin,22px); color:rgba(255,255,255,.85); margin-top:10px; text-align:center; padding:0 20px;}
+.stage-bar{position:absolute; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); display:flex; gap:8px; justify-content:space-between; align-items:center;}
+.stage-bar button{background:var(--navy-2); color:var(--parchment); border:1px solid var(--navy-3); border-radius:8px; padding:10px 14px; font-size:13px; cursor:pointer;}
+.stage-mini{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); padding:9px 4px; text-align:center; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+/* ------- Miembros ------- */
+.members{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+.mchip{background:var(--navy-2); border:1px solid var(--navy-3); color:var(--parchment-dim); border-radius:20px; padding:7px 12px; font-size:13px; cursor:pointer;}
+.mchip.active{background:var(--navy-3); border-color:var(--gold); color:var(--gold-light);}
+.mchip.spoke{opacity:.5;}
+.mchip.spoke::after{content:' ✓'; color:var(--gold);}
+.member-row{display:flex; align-items:center; gap:10px; background:var(--navy-2); border:1px solid var(--navy-3); border-radius:9px; padding:9px 12px; margin-bottom:6px;}
+.member-row .nm{flex:1; font-size:14px;}
+.member-row button{background:none; border:none; color:var(--stamp-light); font-size:17px; cursor:pointer; padding:2px 6px;}
+.addrow{display:flex; gap:8px; margin-top:6px;}
+.addrow .input{flex:1;}
+.addrow .btn{padding:0 16px;}
+.minor-actions{display:flex; gap:8px; margin-top:8px;}
+.minor-actions .btn{flex:1; font-size:13px; padding:10px 6px;}
+textarea.input{min-height:160px; resize:vertical; font-size:15px; line-height:1.4;}
 
 /* ------- Reporte ------- */
 .rep-head{background:var(--navy-2); border:1px solid var(--navy-3); border-radius:10px; padding:12px; margin-bottom:12px;}
@@ -206,6 +226,7 @@ footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospac
       <span class="label">Orador</span>
       <input class="input" id="speakerInput" list="speakerList" type="text" placeholder="Nombre de quien habla" autocomplete="off">
       <datalist id="speakerList"></datalist>
+      <div class="members" id="memberChips"></div>
     </div>
 
     <div class="field">
@@ -231,7 +252,8 @@ footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospac
     <div id="entries"></div>
     <div id="eligBox"></div>
     <div class="controls">
-      <button class="btn btn-gold btn-wide" id="shareBtn">Compartir reporte</button>
+      <button class="btn btn-gold btn-wide" id="pdfBtn">Descargar PDF</button>
+      <button class="btn btn-dark btn-wide" id="shareBtn">Compartir como texto</button>
       <button class="btn btn-dark btn-wide" id="newSessionBtn">Nueva sesión</button>
     </div>
     <div class="hint" id="graceHint"></div>
@@ -239,6 +261,20 @@ footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospac
 
   <!-- ================= AJUSTES ================= -->
   <section id="view-settings" style="display:none;">
+    <div class="block">
+      <div class="section-title">Miembros del club</div>
+      <div id="memberList"></div>
+      <div class="addrow">
+        <input class="input" id="memberInput" type="text" placeholder="Nombre del miembro" autocomplete="off">
+        <button class="btn btn-gold" id="memberAddBtn">Agregar</button>
+      </div>
+      <div class="minor-actions">
+        <button class="btn btn-dark" id="memberPasteBtn">Pegar lista</button>
+        <button class="btn btn-dark" id="memberShareBtn">Compartir lista</button>
+      </div>
+      <div class="hint">Comparte la lista por WhatsApp y tus compañeros la pegan en su equipo con “Pegar lista”.</div>
+    </div>
+
     <div class="block">
       <div class="section-title">Tipos de intervención</div>
       <div id="typeList"></div>
@@ -273,8 +309,12 @@ footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospac
 
 <!-- Pantalla del orador -->
 <div class="stage" id="stage">
-  <div class="stage-clock" id="stageClock">0:00</div>
-  <div class="stage-msg" id="stageMsg"></div>
+  <div class="stage-card">
+    <div class="stage-type" id="stageType"></div>
+    <div class="stage-lights"><i id="slv"></i><i id="sla"></i><i id="slr"></i></div>
+    <div class="stage-clock" id="stageClock">0:00</div>
+    <div class="stage-msg" id="stageMsg"></div>
+  </div>
   <div class="stage-bar">
     <button id="stageExit">✕ Salir</button>
     <span class="stage-mini" id="stageMini">0:00</span>
@@ -307,11 +347,28 @@ footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospac
       <div><span class="label">Amarillo</span><input class="input" id="tmA" inputmode="numeric" placeholder="6:00"></div>
       <div><span class="label">Rojo</span><input class="input" id="tmR" inputmode="numeric" placeholder="7:00"></div>
     </div>
-    <div class="hint" style="margin-top:6px;">Formato minutos:segundos. Si dejas vacío el amarillo, se pone a la mitad entre verde y rojo.</div>
+    <div class="field" style="margin-top:10px;">
+      <span class="label">Tolerancia (segundos, ±)</span>
+      <input class="input" id="tmTol" inputmode="numeric" placeholder="30">
+    </div>
+    <div class="hint" style="margin-top:6px;">Tiempos en minutos:segundos. Si dejas vacío el amarillo, se pone a la mitad entre verde y rojo.</div>
     <div class="err" id="tmErr"></div>
     <div class="card-actions">
       <button class="btn btn-dark" id="tmCancel">Cancelar</button>
       <button class="btn btn-gold" id="tmSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pegar lista de miembros -->
+<div class="overlay" id="pasteModal">
+  <div class="card">
+    <h2>Pegar lista</h2>
+    <p>Un nombre por renglón. Los que ya estén no se duplican.</p>
+    <textarea class="input" id="pasteArea" placeholder="Ana López&#10;Luis Pérez&#10;…"></textarea>
+    <div class="card-actions">
+      <button class="btn btn-dark" id="pasteCancel">Cancelar</button>
+      <button class="btn btn-gold" id="pasteSave">Agregar</button>
     </div>
   </div>
 </div>
@@ -336,7 +393,7 @@ footer{margin-top:28px; text-align:center; font-family:'JetBrains Mono',monospac
    ================================================================== */
 const K = {
   types:'semaforo:types', prefs:'semaforo:prefs', name:'semaforo:name', club:'semaforo:club',
-  session:'semaforo:session', run:'semaforo:run'
+  session:'semaforo:session', run:'semaforo:run', members:'semaforo:members'
 };
 const mem = {};
 function load(k, def){
@@ -349,10 +406,10 @@ function save(k, v){
 }
 
 const DEFAULT_TYPES = [
-  {id:'improv',  nombre:'Tema improvisado', v:60,  a:90,  r:120},
-  {id:'discurso',nombre:'Discurso',         v:300, a:360, r:420},
-  {id:'rompe',   nombre:'Rompehielos',      v:240, a:300, r:360},
-  {id:'eval',    nombre:'Evaluación',       v:120, a:150, r:180}
+  {id:'improv',  nombre:'Tema improvisado', v:60,  a:90,  r:120, tol:10},
+  {id:'discurso',nombre:'Discurso',         v:300, a:360, r:420, tol:30},
+  {id:'rompe',   nombre:'Rompehielos',      v:240, a:300, r:360, tol:30},
+  {id:'eval',    nombre:'Evaluación',       v:120, a:150, r:180, tol:30}
 ];
 const DEFAULT_PREFS = { gracia:true, vibrar:true, sonido:false, tiempoOrador:false, campana:true };
 
@@ -360,6 +417,10 @@ let types   = load(K.types, null) || DEFAULT_TYPES.map(t=>({...t}));
 let prefs   = Object.assign({}, DEFAULT_PREFS, load(K.prefs, {}));
 let session = load(K.session, null) || newSession();
 let run     = load(K.run, null) || { typeId: types[0].id, speaker:'', acc:0, startedAt:null };
+let members = load(K.members, []) || [];
+// equipos que ya tenían tipos guardados sin tolerancia
+types.forEach(t => { if(t.tol == null) t.tol = (t.id==='improv') ? 10 : 30; });
+save(K.types, types);
 if(!types.find(t=>t.id===run.typeId)) run.typeId = types[0].id;
 
 function newSession(){ return { fecha: new Date().toISOString(), entries: [] }; }
@@ -400,7 +461,7 @@ function toast(msg){
 }
 
 function phaseFor(sec, t){
-  if(sec >= t.r + 30) return 'campana';
+  if(sec >= t.r + tolOf(t)) return 'campana';
   if(sec >= t.r) return 'rojo';
   if(sec >= t.a) return 'amarillo';
   if(sec >= t.v) return 'verde';
@@ -408,8 +469,9 @@ function phaseFor(sec, t){
 }
 const PHASE_LABEL = { espera:'', verde:'Tiempo mínimo', amarillo:'Ve cerrando', rojo:'Tiempo máximo', campana:'Concluye ya' };
 
+function tolOf(t){ return (t && t.tol != null) ? t.tol : 30; }
 function statusFor(sec, t){
-  const g = prefs.gracia ? 30 : 0;
+  const g = prefs.gracia ? tolOf(t) : 0;
   if(sec < t.v - g) return 'corto';
   if(sec > t.r + g) return 'excedido';
   return 'ok';
@@ -485,11 +547,16 @@ function renderBoard(){
   const st = $('stage');
   st.className = 'stage' + (stageOpen ? ' show' : '') + (cls ? ' '+cls : '');
   $('stageClock').textContent = fmt(sec);
+  $('stageType').textContent = t.nombre;
+  $('slv').className = baseOn==='verde' ? 'on-v' : '';
+  $('sla').className = baseOn==='amarillo' ? 'on-a' : '';
+  $('slr').className = baseOn==='rojo' ? 'on-r' : '';
   $('stageClock').classList.toggle('hidden', !prefs.tiempoOrador);
-  $('stageMini').textContent = fmt(sec) + ' · ' + t.nombre;
+  $('stageMini').textContent = fmt(sec) + (($('speakerInput').value||'').trim() ? ' · ' + $('speakerInput').value.trim() : '');
   let smsg = '';
   if(ph==='campana' && prefs.campana) smsg = 'Tiempo';
-  else if(ph==='espera' && !isRunning() && !hasTime()) smsg = 'Listo';
+  else if(ph==='espera') smsg = (!isRunning() && !hasTime()) ? 'Listo' : '';
+  else smsg = PHASE_LABEL[ph];
   $('stageMsg').textContent = smsg;
   $('stageToggle').textContent = isRunning() ? 'Pausar' : (hasTime() ? 'Reanudar' : 'Iniciar');
 
@@ -516,7 +583,7 @@ function renderChips(){
   $('chips').querySelectorAll('.chip').forEach(b => b.onclick = () => {
     if(hasTime()) return;
     run.typeId = b.dataset.id; persistRun(); lastPhase = null;
-    renderChips(); renderMarks(); renderBoard();
+    renderChips(); renderMarks(); renderBoard(); renderSpeakerList();
   });
 }
 
@@ -529,8 +596,18 @@ function renderControls(){
 }
 
 function renderSpeakerList(){
-  const names = [...new Set(session.entries.map(e=>e.orador))];
+  const names = [...new Set([...members, ...session.entries.map(e=>e.orador)])];
   $('speakerList').innerHTML = names.map(n=>`<option value="${esc(n)}">`).join('');
+  const cur = ($('speakerInput').value||'').trim().toLowerCase();
+  const spoke = new Set(session.entries.filter(e=>e.tipo===curType().nombre).map(e=>e.orador.toLowerCase()));
+  $('memberChips').innerHTML = members.map(m =>
+    `<button class="mchip ${m.toLowerCase()===cur?'active':''} ${spoke.has(m.toLowerCase())?'spoke':''}" data-n="${esc(m)}">${esc(m)}</button>`
+  ).join('');
+  $('memberChips').querySelectorAll('.mchip').forEach(b => b.onclick = () => {
+    const same = ($('speakerInput').value||'').trim() === b.dataset.n;
+    $('speakerInput').value = same ? '' : b.dataset.n;
+    run.speaker = $('speakerInput').value; persistRun(); renderSpeakerList(); renderBoard();
+  });
 }
 
 /* ==================================================================
@@ -560,7 +637,7 @@ function stopAndLog(){
   const t = curType(), sec = Math.floor(run.acc/1000);
   const orador = ($('speakerInput').value || '').trim() || 'Sin nombre';
   session.entries.push({
-    orador, tipo:t.nombre, v:t.v, a:t.a, r:t.r, seg:sec,
+    orador, tipo:t.nombre, v:t.v, a:t.a, r:t.r, tol:tolOf(t), seg:sec,
     estado: statusFor(sec, t), hora: new Date().toISOString()
   });
   save(K.session, session);
@@ -579,7 +656,6 @@ function stopAndLog(){
 let stageOpen = false;
 function openStage(){
   // Sin pantalla completa del navegador: así Chrome no muestra su aviso.
-  // El recuadro ya cubre toda la pantalla de la app.
   stageOpen = true; keepAwake(true);
   try{ history.pushState({stage:true}, ''); }catch(e){}
   renderBoard();
@@ -587,7 +663,7 @@ function openStage(){
 function closeStage(fromBack){
   if(!stageOpen) return;
   stageOpen = false;
-  if(!fromBack){ try{ if(history.state && history.state.stage) history.back(); }catch(e){} }
+  if(fromBack !== true){ try{ if(history.state && history.state.stage) history.back(); }catch(e){} }
   if(!isRunning()) keepAwake(false);
   renderBoard();
 }
@@ -617,7 +693,7 @@ function renderReport(){
         <span class="dot" style="background:${col}"></span>
         <div class="info">
           <div class="nm">${esc(e.orador)}</div>
-          <div class="ty">${esc(e.tipo)} · ${fmt(e.v)}–${fmt(e.r)}<span class="badge ${e.estado}">${STATUS_LABEL[e.estado]}</span></div>
+          <div class="ty">${esc(e.tipo)} · ${fmt(e.v)}–${fmt(e.r)}${prefs.gracia ? ' ±'+tolOf(e)+'s' : ''}<span class="badge ${e.estado}">${STATUS_LABEL[e.estado]}</span></div>
         </div>
         <div class="tm">${fmt(e.seg)}</div>
         <button class="del" data-i="${i}" title="Borrar">×</button>
@@ -638,7 +714,7 @@ function renderReport(){
                    : '<div class="grp" style="color:var(--muted)">Nadie quedó dentro del tiempo.</div>') + `</div>`;
   }
   $('graceHint').textContent = prefs.gracia
-    ? 'Se considera “en tiempo” con 30 segundos de tolerancia antes del verde y después del rojo.'
+    ? 'Se considera “en tiempo” con la tolerancia de cada tipo antes del verde y después del rojo (improvisados ±10 s; los demás ±30 s, salvo que cambies otro en Ajustes).'
     : 'Sin tolerancia: solo cuenta “en tiempo” entre el verde y el rojo exactos.';
 }
 
@@ -654,7 +730,7 @@ function reportText(){
   session.entries.forEach(e => (byType[e.tipo] = byType[e.tipo] || []).push(e));
   Object.keys(byType).forEach(tp => {
     const f = byType[tp][0];
-    lines.push(`▸ ${tp} (${fmt(f.v)}–${fmt(f.r)})`);
+    lines.push(`▸ ${tp} (${fmt(f.v)}–${fmt(f.r)}${prefs.gracia ? ', ±' + tolOf(f) + ' s' : ''})`);
     byType[tp].forEach(e => {
       const ic = e.estado==='ok' ? '🟢' : (e.estado==='corto' ? '🟡' : '🔴');
       lines.push(`  ${ic} ${e.orador} — ${fmt(e.seg)} (${STATUS_LABEL[e.estado]})`);
@@ -669,8 +745,175 @@ function reportText(){
     if(names.length) lines.push(`  ${tp}: ${names.join(', ')}`);
   });
   lines.push('');
-  lines.push(prefs.gracia ? 'Tolerancia aplicada: ±30 s.' : 'Sin tolerancia.');
+  if(!prefs.gracia) lines.push('Sin tolerancia.');
   return lines.join('\n');
+}
+
+/* ==================================================================
+   Reporte en PDF (colores institucionales de Toastmasters, sin logo)
+   ================================================================== */
+function loadJsPDF(){
+  if(window.jspdf) return Promise.resolve(window.jspdf);
+  return new Promise((ok, fail) => {
+    const sc = document.createElement('script');
+    sc.src = './jspdf.umd.min.js';
+    sc.onload = () => window.jspdf ? ok(window.jspdf) : fail(new Error('jsPDF'));
+    sc.onerror = fail;
+    document.head.appendChild(sc);
+  });
+}
+
+async function downloadPDF(){
+  if(!session.entries.length){ toast('No hay registros todavía'); return; }
+  let lib;
+  try{ lib = await loadJsPDF(); }catch(e){ toast('No se pudo preparar el PDF'); return; }
+  const { jsPDF } = lib;
+  const doc = new jsPDF({ unit:'pt', format:'letter' });
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+  const M = 46;                                  // margen
+  const BLUE=[0,65,101], MAROON=[119,36,50], GRAY=[169,178,177], LIGHT=[237,240,239], INK=[35,40,48], MUTED=[110,118,125];
+  const OKC=[30,158,90], SHORTC=[226,168,0], OVERC=[200,45,38];
+  const club = load(K.club,'') || '';
+  const timer = load(K.name,'') || '—';
+  const fecha = sessionDate();
+  const fechaCap = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  const clean = s => String(s).replace(/[^\x20-\x7E\u00A0-\u00FF\u2013\u2014\u2019\u201C\u201D\u2022]/g,'').trim();
+
+  function header(first){
+    doc.setFillColor(...BLUE); doc.rect(0, 0, W, first ? 96 : 54, 'F');
+    doc.setFillColor(...MAROON); doc.rect(0, first ? 96 : 54, W, 5, 'F');
+    doc.setTextColor(255,255,255);
+    if(first){
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.text('TOASTMASTERS · ROL DE TOMADOR DE TIEMPO', M, 34, {charSpace:1.2});
+      doc.setFontSize(22); doc.text('Reporte del Tomador de tiempo', M, 62);
+      doc.setFont('helvetica','normal'); doc.setFontSize(11);
+      doc.text(clean(club) || 'Sesión del club', M, 82);
+      return 128;
+    }
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Reporte del Tomador de tiempo', M, 33);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.text(clean(club) + (club ? ' · ' : '') + fechaCap, W - M, 33, {align:'right'});
+    return 86;
+  }
+  let y = header(true);
+  const LIMIT = H - 64;
+  function need(h){ if(y + h > LIMIT){ doc.addPage(); y = header(false); } }
+
+  // Datos de la sesión
+  const info = [['FECHA', fechaCap], ['TOMADOR DE TIEMPO', clean(timer)], ['CLUB', clean(club) || '—']];
+  const colW = (W - 2*M) / 3;
+  info.forEach(([l,v],i) => {
+    const x = M + i*colW;
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+    doc.text(l, x, y, {charSpace:.8});
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(...INK);
+    doc.text(doc.splitTextToSize(v, colW - 10), x, y + 15);
+  });
+  y += 42;
+
+  // Resumen
+  const tot = session.entries.length;
+  const nOk = session.entries.filter(e=>e.estado==='ok').length;
+  const nC = session.entries.filter(e=>e.estado==='corto').length;
+  const nX = session.entries.filter(e=>e.estado==='excedido').length;
+  const boxes = [['Intervenciones', tot, BLUE], ['En tiempo', nOk, OKC], ['Cortos', nC, SHORTC], ['Excedidos', nX, OVERC]];
+  const bw = (W - 2*M - 3*10) / 4;
+  boxes.forEach(([l,n,c],i) => {
+    const x = M + i*(bw+10);
+    doc.setFillColor(...LIGHT); doc.roundedRect(x, y, bw, 50, 4, 4, 'F');
+    doc.setFillColor(...c); doc.rect(x, y, 4, 50, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...c);
+    doc.text(String(n), x + 16, y + 28);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
+    doc.text(l, x + 16, y + 42);
+  });
+  y += 74;
+
+  // Tablas por tipo de intervención
+  const byType = {};
+  session.entries.forEach(e => (byType[e.tipo] = byType[e.tipo] || []).push(e));
+  const cols = { n: M + 10, name: M + 34, time: W - M - 190, res: W - M - 120 };
+  Object.keys(byType).forEach(tp => {
+    const list = byType[tp], f = list[0];
+    need(34 + 24 + 22);
+    doc.setFillColor(...BLUE); doc.rect(M, y, W - 2*M, 26, 'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10.5);
+    doc.text(clean(tp).toUpperCase(), M + 10, y + 17);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    const rng = `Verde ${fmt(f.v)}   Amarillo ${fmt(f.a)}   Rojo ${fmt(f.r)}` + (prefs.gracia ? `   Tolerancia ±${tolOf(f)} s` : '');
+    doc.text(rng, W - M - 10, y + 17, {align:'right'});
+    y += 26;
+    doc.setFillColor(...LIGHT); doc.rect(M, y, W - 2*M, 20, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+    doc.text('#', cols.n, y + 13); doc.text('ORADOR', cols.name, y + 13);
+    doc.text('TIEMPO', cols.time, y + 13); doc.text('RESULTADO', cols.res, y + 13);
+    y += 20;
+    list.forEach((e,i) => {
+      need(24);
+      if(i % 2 === 1){ doc.setFillColor(248,249,249); doc.rect(M, y, W - 2*M, 24, 'F'); }
+      doc.setDrawColor(...GRAY); doc.setLineWidth(.4); doc.line(M, y + 24, W - M, y + 24);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...MUTED);
+      doc.text(String(i+1), cols.n, y + 16);
+      doc.setTextColor(...INK);
+      doc.text(doc.splitTextToSize(clean(e.orador), cols.time - cols.name - 12)[0], cols.name, y + 16);
+      doc.setFont('courier','bold'); doc.setFontSize(11);
+      doc.text(fmt(e.seg), cols.time, y + 16);
+      const c = e.estado==='ok' ? OKC : (e.estado==='corto' ? SHORTC : OVERC);
+      doc.setFillColor(...c); doc.circle(cols.res + 4, y + 12.5, 4, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...c);
+      doc.text(STATUS_LABEL[e.estado], cols.res + 14, y + 16);
+      y += 24;
+    });
+    y += 20;
+  });
+
+  // Elegibles
+  const groups = {};
+  session.entries.filter(e=>e.estado==='ok').forEach(e => (groups[e.tipo] = groups[e.tipo] || []).push(clean(e.orador)));
+  const keys = Object.keys(groups);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  const lines = keys.length ? keys.map(k => ({k:clean(k), v:doc.splitTextToSize(groups[k].join(', '), W - 2*M - 150)})) : [];
+  const boxH = 40 + (lines.length ? lines.reduce((a,l)=>a + l.v.length*14 + 6, 0) : 20);
+  need(boxH + 10);
+  doc.setDrawColor(...MAROON); doc.setLineWidth(1.2); doc.roundedRect(M, y, W - 2*M, boxH, 4, 4, 'S');
+  doc.setFillColor(...MAROON); doc.rect(M, y + 4, 4, boxH - 8, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...MAROON);
+  doc.text('ELEGIBLES PARA VOTACIÓN', M + 16, y + 22, {charSpace:.8});
+  let yy = y + 42;
+  if(!lines.length){
+    doc.setFont('helvetica','italic'); doc.setTextColor(...MUTED); doc.text('Nadie quedó dentro del tiempo.', M + 16, yy);
+  } else lines.forEach(l => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...MUTED);
+    doc.text(l.k.toUpperCase(), M + 16, yy);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...INK);
+    doc.text(l.v, M + 150, yy);
+    yy += l.v.length*14 + 6;
+  });
+  y += boxH + 16;
+
+  need(30);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
+  doc.text(prefs.gracia
+    ? 'Criterio: “en tiempo” incluye la tolerancia de cada tipo antes del verde y después del rojo.'
+    : 'Criterio: sin tolerancia; solo cuenta “en tiempo” entre el verde y el rojo exactos.', M, y);
+
+  // Pie de página en cada hoja
+  const pages = doc.getNumberOfPages();
+  const stamp = new Date().toLocaleString('es-MX', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setDrawColor(...GRAY); doc.setLineWidth(.5); doc.line(M, H - 40, W - M, H - 40);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    doc.text('Elaborado por Rubén Baugh · ' + stamp, M, H - 26);
+    doc.text(`Página ${i} de ${pages}`, W - M, H - 26, {align:'right'});
+  }
+
+  const d = new Date(session.fecha);
+  const ymd = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  doc.save(`Reporte-Tomador-de-tiempo-${ymd}.pdf`);
+  toast('PDF descargado');
 }
 
 async function shareReport(){
@@ -692,8 +935,8 @@ async function shareReport(){
    Ajustes
    ================================================================== */
 const TOGGLES = [
-  ['gracia','Tolerancia de 30 segundos','Quien quede 30 s antes del verde o 30 s después del rojo sigue “en tiempo”.'],
-  ['campana','Parpadeo a los 30 s del rojo','La pantalla parpadea en rojo cuando el orador rebasa el rojo por 30 s.'],
+  ['gracia','Aplicar tolerancia','Cada tipo tiene su margen: ±10 s en improvisados, ±30 s en los demás. Se ajusta al editar el tipo.'],
+  ['campana','Parpadeo al agotar la tolerancia','El recuadro parpadea en rojo cuando el orador rebasa el rojo más su tolerancia.'],
   ['vibrar','Vibrar al cambiar de color','Para que sientas el cambio sin voltear a ver. Solo en Android.'],
   ['sonido','Sonido al cambiar de color','Un pitido corto; en reunión conviene dejarlo apagado.'],
   ['tiempoOrador','Mostrar el reloj al orador','Si está apagado, el orador solo ve el color.']
@@ -703,7 +946,7 @@ function renderSettings(){
     <div class="type-row">
       <div class="info">
         <div class="nm">${esc(t.nombre)}</div>
-        <div class="tt"><span class="v">● ${fmt(t.v)}</span><span class="a">● ${fmt(t.a)}</span><span class="r">● ${fmt(t.r)}</span></div>
+        <div class="tt"><span class="v">● ${fmt(t.v)}</span><span class="a">● ${fmt(t.a)}</span><span class="r">● ${fmt(t.r)}</span><span style="color:var(--muted)">±${tolOf(t)}s</span></div>
       </div>
       <button data-edit="${t.id}">Editar</button>
       <button class="x" data-del="${t.id}" title="Borrar">×</button>
@@ -734,6 +977,35 @@ function renderSettings(){
   if(document.activeElement !== $('nameField')) $('nameField').value = load(K.name,'') || '';
   if(document.activeElement !== $('clubField')) $('clubField').value = load(K.club,'') || '';
 }
+function renderMembers(){
+  $('memberList').innerHTML = members.length
+    ? members.map((m,i)=>`<div class="member-row"><span class="nm">${esc(m)}</span><button data-i="${i}" title="Quitar">×</button></div>`).join('')
+    : '<div class="hint" style="margin:0 0 8px;">Aún no hay miembros. Agrégalos uno por uno o pega la lista completa.</div>';
+  $('memberList').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const m = members[+b.dataset.i];
+    confirmBox('¿Quitar miembro?', m, 'Quitar', () => { members.splice(+b.dataset.i,1); save(K.members, members); renderAll(); });
+  });
+}
+function addMembers(list){
+  const have = new Set(members.map(m=>m.toLowerCase()));
+  let added = 0;
+  list.map(x=>x.replace(/^[\s\-•*\d.)]+/,'').trim()).filter(Boolean).forEach(n => {
+    if(!have.has(n.toLowerCase())){ members.push(n); have.add(n.toLowerCase()); added++; }
+  });
+  members.sort((a,b)=>a.localeCompare(b,'es'));
+  save(K.members, members);
+  return added;
+}
+async function shareMembers(){
+  if(!members.length){ toast('La lista está vacía'); return; }
+  const text = members.join('\n');
+  if(navigator.share){
+    try{ await navigator.share({ title:'Miembros del club', text }); return; }
+    catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(text); toast('Lista copiada'); }catch(e){ toast('No se pudo copiar'); }
+}
+
 function recomputeStatuses(){
   session.entries.forEach(e => { e.estado = statusFor(e.seg, e); });
   save(K.session, session);
@@ -748,6 +1020,7 @@ function openTypeModal(id){
   $('tmV').value = t ? fmt(t.v) : '';
   $('tmA').value = t ? fmt(t.a) : '';
   $('tmR').value = t ? fmt(t.r) : '';
+  $('tmTol').value = t ? tolOf(t) : '30';
   $('tmErr').textContent = '';
   $('typeModal').classList.add('show');
   setTimeout(()=>$('tmName').focus(), 50);
@@ -761,10 +1034,13 @@ function saveTypeModal(){
   if(a==null) a = Math.round((v+r)/2);
   if(isNaN(a)) return $('tmErr').textContent = 'Revisa el amarillo (ej. 6:00).';
   if(!(v>0 && v<a && a<r)) return $('tmErr').textContent = 'Debe ir en orden: verde < amarillo < rojo.';
+  const tolRaw = $('tmTol').value.trim();
+  const tol = tolRaw === '' ? 30 : parseInt(tolRaw, 10);
+  if(isNaN(tol) || tol < 0 || tol > 120) return $('tmErr').textContent = 'La tolerancia va de 0 a 120 segundos.';
   if(editingId){
-    Object.assign(types.find(x=>x.id===editingId), {nombre, v, a, r});
+    Object.assign(types.find(x=>x.id===editingId), {nombre, v, a, r, tol});
   } else {
-    types.push({ id:'t'+Date.now().toString(36), nombre, v, a, r });
+    types.push({ id:'t'+Date.now().toString(36), nombre, v, a, r, tol });
   }
   save(K.types, types);
   $('typeModal').classList.remove('show');
@@ -800,7 +1076,7 @@ function renderOwner(){
 
 function renderAll(){
   renderOwner(); renderChips(); renderMarks(); renderControls(); renderBoard();
-  renderSpeakerList(); renderReport(); renderSettings();
+  renderSpeakerList(); renderReport(); renderSettings(); renderMembers();
 }
 
 $('startBtn').onclick = toggleRun;
@@ -809,8 +1085,22 @@ $('resetBtn').onclick = () => confirmBox('¿Reiniciar el tiempo?', 'Se descarta 
 $('stageBtn').onclick = openStage;
 $('stageExit').onclick = () => closeStage();
 $('stageToggle').onclick = toggleRun;
-$('speakerInput').oninput = e => { run.speaker = e.target.value; persistRun(); };
+$('speakerInput').oninput = e => { run.speaker = e.target.value; persistRun(); renderSpeakerList(); };
+$('memberAddBtn').onclick = () => {
+  const n = $('memberInput').value.trim(); if(!n) return;
+  if(addMembers([n])) toast('Agregado: ' + n); else toast('Ya estaba en la lista');
+  $('memberInput').value = ''; $('memberInput').focus(); renderAll();
+};
+$('memberInput').onkeydown = e => { if(e.key==='Enter') $('memberAddBtn').click(); };
+$('memberPasteBtn').onclick = () => { $('pasteArea').value = ''; $('pasteModal').classList.add('show'); setTimeout(()=>$('pasteArea').focus(),50); };
+$('pasteCancel').onclick = () => $('pasteModal').classList.remove('show');
+$('pasteSave').onclick = () => {
+  const n = addMembers($('pasteArea').value.split(/\r?\n|,|;/));
+  $('pasteModal').classList.remove('show'); toast(n ? `${n} miembro${n>1?'s':''} agregado${n>1?'s':''}` : 'No había nombres nuevos'); renderAll();
+};
+$('memberShareBtn').onclick = shareMembers;
 $('shareBtn').onclick = shareReport;
+$('pdfBtn').onclick = downloadPDF;
 $('newSessionBtn').onclick = () => {
   if(!session.entries.length){ session = newSession(); save(K.session, session); renderAll(); toast('Sesión nueva'); return; }
   confirmBox('¿Empezar sesión nueva?', 'Se borra el reporte actual de este equipo. Compártelo antes si lo necesitas.', 'Empezar nueva', () => {
